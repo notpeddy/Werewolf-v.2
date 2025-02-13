@@ -1,0 +1,106 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <ctime>
+#include <cstdlib>
+
+enum Role { WEREWOLF, VILLAGER, SEER };
+
+struct Player {
+    std::string name;
+    Role role;
+    bool alive;
+};
+
+void assignRoles(std::vector<Player>& players) {
+    std::srand(std::time(0));
+    int numPlayers = players.size();
+    int numWerewolves = numPlayers / 3;
+    int numSeers = 1;
+
+    for (int i = 0; i < numWerewolves; ++i) {
+        players[i].role = WEREWOLF;
+    }
+    for (int i = numWerewolves; i < numWerewolves + numSeers; ++i) {
+        players[i].role = SEER;
+    }
+    for (int i = numWerewolves + numSeers; i < numPlayers; ++i) {
+        players[i].role = VILLAGER;
+    }
+
+    std::random_shuffle(players.begin(), players.end());
+}
+
+void displayRoles(const std::vector<Player>& players) {
+    for (const auto& player : players) {
+        std::cout << player.name << " is a ";
+        switch (player.role) {
+            case WEREWOLF: std::cout << "Werewolf"; break;
+            case VILLAGER: std::cout << "Villager"; break;
+            case SEER: std::cout << "Seer"; break;
+        }
+        std::cout << std::endl;
+    }
+}
+
+bool gameOver(const std::vector<Player>& players) {
+    int werewolves = 0, villagers = 0;
+    for (const auto& player : players) {
+        if (player.alive) {
+            if (player.role == WEREWOLF) ++werewolves;
+            else ++villagers;
+        }
+    }
+    return werewolves == 0 || werewolves >= villagers;
+}
+
+void nightPhase(std::vector<Player>& players) {
+    std::cout << "Night falls. Werewolves, choose your victim." << std::endl;
+    // Simplified: Werewolves kill the first alive villager
+    for (auto& player : players) {
+        if (player.alive && player.role == VILLAGER) {
+            player.alive = false;
+            std::cout << player.name << " was killed by the Werewolves." << std::endl;
+            break;
+        }
+    }
+}
+
+void dayPhase(std::vector<Player>& players) {
+    std::cout << "Day breaks. Villagers, choose someone to lynch." << std::endl;
+    // Simplified: Villagers lynch the first alive player
+    for (auto& player : players) {
+        if (player.alive) {
+            player.alive = false;
+            std::cout << player.name << " was lynched by the Villagers." << std::endl;
+            break;
+        }
+    }
+}
+
+int main() {
+    std::vector<Player> players = {
+        {"Alice", VILLAGER, true},
+        {"Bob", VILLAGER, true},
+        {"Charlie", VILLAGER, true},
+        {"Dave", VILLAGER, true},
+        {"Eve", VILLAGER, true},
+        {"Frank", VILLAGER, true},
+        {"Grace", VILLAGER, true},
+        {"Heidi", VILLAGER, true},
+        {"Ivan", VILLAGER, true},
+        {"Judy", VILLAGER, true}
+    };
+
+    assignRoles(players);
+    displayRoles(players);
+
+    while (!gameOver(players)) {
+        nightPhase(players);
+        if (gameOver(players)) break;
+        dayPhase(players);
+    }
+
+    std::cout << "Game over!" << std::endl;
+    return 0;
+}
